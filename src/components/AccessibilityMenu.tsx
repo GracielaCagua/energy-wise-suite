@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -52,9 +52,17 @@ export const AccessibilityMenu = () => {
   const [open, setOpen] = useState(false);
   const [tempPerfil, setTempPerfil] = useState(perfil);
 
+  // Keep the temporary selection in sync with the context perfil
+  // so when the profile is loaded from Supabase the UI reflects it.
+  // sync when perfil changes (e.g., after login and cargarPerfil runs)
+  useEffect(() => {
+    setTempPerfil(perfil);
+  }, [perfil]);
+
   const handleApply = () => {
+    // Apply the temporary perfil immediately and persist if possible
+    aplicarPerfil(tempPerfil as any);
     setPerfil(tempPerfil as any);
-    aplicarPerfil();
     setOpen(false);
     toast.success("Perfil de accesibilidad aplicado correctamente");
   };

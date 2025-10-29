@@ -21,6 +21,7 @@ export type Database = {
           fecha: string
           id: string
           user_id: string
+          dispositivo_id: string | null
         }
         Insert: {
           consumo_kwh: number
@@ -28,6 +29,7 @@ export type Database = {
           fecha: string
           id?: string
           user_id: string
+          dispositivo_id?: string | null
         }
         Update: {
           consumo_kwh?: number
@@ -35,6 +37,82 @@ export type Database = {
           fecha?: string
           id?: string
           user_id?: string
+          dispositivo_id?: string | null
+        }
+        Relationships: []
+      }
+      dispositivos: {
+        Row: {
+          id: string
+          user_id: string
+          nombre: string
+          potencia_w: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          nombre: string
+          potencia_w?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          nombre?: string
+          potencia_w?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      dispositivo_consumo_diario: {
+        Row: {
+          id: string
+          dispositivo_id: string
+          fecha: string
+          consumo_kwh: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          dispositivo_id: string
+          fecha: string
+          consumo_kwh: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          dispositivo_id?: string
+          fecha?: string
+          consumo_kwh?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      dispositivo_consumo_horario: {
+        Row: {
+          id: string
+          dispositivo_id: string
+          ts: string
+          consumo_kwh: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          dispositivo_id: string
+          ts: string
+          consumo_kwh: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          dispositivo_id?: string
+          ts?: string
+          consumo_kwh?: number
+          created_at?: string
         }
         Relationships: []
       }

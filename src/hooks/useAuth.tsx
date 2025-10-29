@@ -61,7 +61,7 @@ export const useAuth = () => {
   const signUp = async (email: string, password: string, nombre: string) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
-      
+      const start = Date.now();
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -73,8 +73,21 @@ export const useAuth = () => {
         }
       });
 
+      const duration = Date.now() - start;
+      // record db/auth latency metric
+      try {
+        await supabase.from('metricas_usabilidad').insert({
+          user_id: null,
+          formulario: 'auth',
+          accion: 'db_latency_signup',
+          metadata: { ms: duration, success: !error }
+        });
+      } catch (e) {
+        console.warn('Could not record signup latency metric', e);
+      }
+
       if (error) throw error;
-      
+
       toast.success("Registro exitoso. Por favor, revisa tu email para confirmar tu cuenta.");
       return { error: null };
     } catch (error: any) {
@@ -85,13 +98,26 @@ export const useAuth = () => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      const start = Date.now();
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      const duration = Date.now() - start;
+      try {
+        await supabase.from('metricas_usabilidad').insert({
+          user_id: null,
+          formulario: 'auth',
+          accion: 'db_latency_signin',
+          metadata: { ms: duration, success: !error }
+        });
+      } catch (e) {
+        console.warn('Could not record signin latency metric', e);
+      }
+
       if (error) throw error;
-      
+
       toast.success("¡Bienvenido a EcoSense!");
       return { error: null };
     } catch (error: any) {
@@ -116,14 +142,36 @@ export const useAuth = () => {
   const resetPassword = async (email: string) => {
     try {
       const redirectUrl = `${window.location.origin}/auth?mode=reset`;
-      
+      const start = Date.now();
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
       });
 
+      const duration = Date.now() - start;
+      try {
+        await supabase.from('metricas_usabilidad').insert({
+          user_id: null,
+          formulario: 'auth',
+          accion: 'db_latency_reset',
+          metadata: { ms: duration, success: !error }
+        });
+      } catch (e) {
+        console.warn('Could not record reset latency metric', e);
+      }
+
       if (error) throw error;
-      
+
       toast.success("Revisa tu email para restablecer tu contraseña");
+      try {
+        await supabase.from('metricas_usabilidad').insert({
+          user_id: null,
+          formulario: 'auth',
+          accion: 'reset_sent',
+          metadata: { email, timestamp: new Date().toISOString() }
+        });
+      } catch (e) {
+        console.warn('Could not record reset_sent metric', e);
+      }
       return { error: null };
     } catch (error: any) {
       toast.error(error.message || "Error al enviar email de recuperación");

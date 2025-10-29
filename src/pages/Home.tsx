@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useMetrics } from "@/hooks/useMetrics";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useRef } from "react";
 import { 
   Leaf, 
   TrendingDown, 
@@ -16,8 +17,65 @@ import {
 } from "lucide-react";
 
 export default function Home() {
-  const { trackClick } = useMetrics("home");
+  const { trackClick, trackMetric } = useMetrics("home");
   const { user } = useAuth();
+
+  // Metrics refs/state
+  const startTs = useRef<number>(Date.now());
+  const interactionRef = useRef<number>(0);
+
+  // Scroll depth tracking
+  useEffect(() => {
+    const thresholds = new Set<number>();
+
+    const onScroll = () => {
+      const scrollTop = window.scrollY || window.pageYOffset;
+      const docHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+      const winHeight = window.innerHeight;
+      const scrolled = Math.min(100, Math.floor(((scrollTop + winHeight) / docHeight) * 100));
+
+      [25, 50, 75, 100].forEach((t) => {
+        if (scrolled >= t && !thresholds.has(t)) {
+          thresholds.add(t);
+          trackMetric({ accion: "scroll_depth", metadata: { percent: t, timestamp: new Date().toISOString() } });
+        }
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    // initial
+    onScroll();
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Abandonment detection and time spent: on unmount
+  useEffect(() => {
+    return () => {
+      const timeSpent = Math.floor((Date.now() - startTs.current) / 1000);
+
+      // If user spent <30s and didn't interact, mark as potential abandonment
+      if (timeSpent < 30 && interactionRef.current === 0) {
+        trackMetric({ accion: "abandonment", metadata: { timeSpent, reason: "no_interaction", timestamp: new Date().toISOString() } });
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Keyboard navigation tracking
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Tab" || e.key === "Enter") {
+        trackMetric({ accion: "keyboard_nav", metadata: { key: e.key, timestamp: new Date().toISOString() } });
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const features = [
     {
@@ -82,7 +140,12 @@ export default function Home() {
                 asChild
                 size="lg"
                 className="text-lg"
-                onClick={() => trackClick("cta_primary")}
+                onClick={() => {
+                  trackClick("cta_primary");
+                  interactionRef.current += 1;
+                  const seconds = Math.floor((Date.now() - startTs.current) / 1000);
+                  trackMetric({ accion: "time_to_cta", metadata: { seconds, timestamp: new Date().toISOString() } });
+                }}
               >
                 <Link to={user ? "/dashboard" : "/auth"} className="flex items-center gap-2">
                   {user ? "Ir al Dashboard" : "Comenzar Gratis"}
@@ -94,7 +157,7 @@ export default function Home() {
                 size="lg"
                 variant="outline"
                 className="text-lg"
-                onClick={() => trackClick("cta_secondary")}
+                onClick={() => { trackClick("cta_secondary"); interactionRef.current += 1; }}
               >
                 <Link to="#features">Conocer Más</Link>
               </Button>

@@ -1,12 +1,33 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Leaf, LogOut, LayoutDashboard, Shield } from "lucide-react";
+import { Leaf, LogOut, LayoutDashboard, Shield, Bell } from "lucide-react";
+import useNotify from "@/hooks/useNotify";
 import { useAuth } from "@/hooks/useAuth";
+import { useAccessibility } from "@/contexts/AccessibilityContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useMetrics } from "@/hooks/useMetrics";
+import { useState, useEffect } from "react";
 
 export const Header = () => {
   const { user, isAdmin, signOut } = useAuth();
   const { trackClick } = useMetrics("header");
+  const { perfil, aplicarPerfil, cargarPerfil } = useAccessibility();
+  const { notify } = useNotify();
+  const [localPerfil, setLocalPerfil] = useState<string | null>(null);
+  const [showSyncBanner, setShowSyncBanner] = useState(false);
+
+  useEffect(() => {
+    const local = localStorage.getItem("accessibility_perfil");
+    setLocalPerfil(local);
+    setShowSyncBanner(!!(user && local && local !== perfil));
+  }, [user, perfil]);
 
   const handleSignOut = () => {
     trackClick("logout_button");
@@ -30,6 +51,63 @@ export const Header = () => {
         </Link>
 
         <nav className="flex items-center gap-2">
+          {/* Sync modal: show when user has local profile different from account profile */}
+          <Dialog open={showSyncBanner} onOpenChange={setShowSyncBanner}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Preferencia local detectada</DialogTitle>
+                <DialogDescription>
+                  Se encontró una preferencia de accesibilidad guardada localmente que difiere de la configurada en tu cuenta.
+                  ¿Deseas usar tu preferencia local (se sincronizará con tu cuenta) o mantener la preferencia de tu cuenta?
+                </DialogDescription>
+              </DialogHeader>
+
+              <DialogFooter>
+                <div className="flex gap-2 w-full">
+                  <Button
+                    className="flex-1"
+                    onClick={() => {
+                      if (localPerfil) {
+                        aplicarPerfil(localPerfil as any);
+                        notify({ title: "Preferencia sincronizada", description: "Se aplicó y sincronizó tu preferencia local." });
+                      }
+                      setShowSyncBanner(false);
+                    }}
+                  >
+                    Usar local
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={async () => {
+                      await cargarPerfil(true);
+                      notify({ title: "Preferencia de cuenta aplicada", description: "Se aplicó la preferencia almacenada en tu cuenta." });
+                      setShowSyncBanner(false);
+                    }}
+                  >
+                    Usar cuenta
+                  </Button>
+                </div>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          {/* Current profile indicator */}
+          <div className="mr-2 px-3 py-1 rounded-md border bg-white/50 text-sm hidden sm:flex items-center">
+            <span className="font-medium mr-2">Perfil:</span>
+            <span className="capitalize">{perfil === 'ninguna' ? 'Ninguno' : perfil}</span>
+          </div>
+
+          {/* Quick test notification button */}
+          <Button
+            variant="ghost"
+            className="mr-2"
+            onClick={() => notify({ title: 'Notificación de prueba', description: 'Esta es una notificación visual de prueba.', forceVisual: true })}
+            aria-label="Probar notificación"
+            title="Probar notificación"
+          >
+            <Bell className="h-4 w-4" />
+            <span className="sr-only">Probar notificación</span>
+          </Button>
           {user ? (
             <>
               <Button

@@ -128,3 +128,72 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Accessibility profiles - global rules that consume the CSS variables set by the context */
+@layer components {
+  :root {
+    /* sensible defaults (can be overridden by AccessibilityContext) */
+    --font-size-base: 1rem;
+    --contrast-boost: 1;
+    --animation-duration: 0.3s;
+    --target-size-min: 40px;
+    --spacing-interactive: 0.5rem;
+    --content-max-width: 75ch;
+    --line-height: 1.6;
+  }
+
+  /* Apply base variables across the app */
+  html, body {
+    font-size: var(--font-size-base);
+    line-height: var(--line-height);
+    transition: filter var(--animation-duration), font-size var(--animation-duration);
+  }
+
+  /* Visual profile: increase contrast and font size */
+  .perfil-visual {
+    filter: contrast(var(--contrast-boost));
+  }
+
+  /* Auditiva: reduce or remove audio-dependent animations - mainly reduce motion */
+  .perfil-auditiva *, .perfil-auditiva {
+    transition-duration: var(--animation-duration);
+    animation-duration: var(--animation-duration) !important;
+  }
+
+  /* Visual alerts: components can show visual-only notifications when this class is set */
+  .perfil-auditiva .visual-alert,
+  [data-prefers-visual-alerts="1"] .visual-alert {
+    display: block;
+  }
+
+  .visual-alert {
+    display: none;
+  }
+
+  /* Motriz: increase interactive target sizes and spacing */
+  .perfil-motriz button,
+  .perfil-motriz a,
+  .perfil-motriz [role="button"],
+  .perfil-motriz .btn {
+    min-height: var(--target-size-min);
+    padding: calc(var(--spacing-interactive) + 0.25rem) calc(var(--spacing-interactive) + 0.5rem);
+  }
+
+  /* Cognitiva: constrain content width and increase line height for readability */
+  .perfil-cognitiva main,
+  .perfil-cognitiva .container,
+  .perfil-cognitiva article {
+    max-width: var(--content-max-width);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Utility to ensure focus outlines are visible when any profile is active */
+  .perfil-visual :focus,
+  .perfil-motriz :focus,
+  .perfil-cognitiva :focus,
+  .perfil-auditiva :focus {
+    outline: 3px solid hsl(var(--primary) / 0.9);
+    outline-offset: 2px;
+  }
+}
