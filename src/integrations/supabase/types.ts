@@ -14,16 +14,129 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      consumo_usuarios: {
+        Row: {
+          consumo_kwh: number
+          created_at: string
+          fecha: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          consumo_kwh: number
+          created_at?: string
+          fecha: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          consumo_kwh?: number
+          created_at?: string
+          fecha?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      metricas_usabilidad: {
+        Row: {
+          accion: string
+          formulario: string
+          id: string
+          metadata: Json | null
+          timestamp: string
+          user_id: string | null
+        }
+        Insert: {
+          accion: string
+          formulario: string
+          id?: string
+          metadata?: Json | null
+          timestamp?: string
+          user_id?: string | null
+        }
+        Update: {
+          accion?: string
+          formulario?: string
+          id?: string
+          metadata?: Json | null
+          timestamp?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          nombre: string
+          perfil_accesibilidad:
+            | Database["public"]["Enums"]["perfil_accesibilidad"]
+            | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          nombre: string
+          perfil_accesibilidad?:
+            | Database["public"]["Enums"]["perfil_accesibilidad"]
+            | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          nombre?: string
+          perfil_accesibilidad?:
+            | Database["public"]["Enums"]["perfil_accesibilidad"]
+            | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "usuario"
+      perfil_accesibilidad:
+        | "visual"
+        | "auditiva"
+        | "motriz"
+        | "cognitiva"
+        | "ninguna"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +263,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "usuario"],
+      perfil_accesibilidad: [
+        "visual",
+        "auditiva",
+        "motriz",
+        "cognitiva",
+        "ninguna",
+      ],
+    },
   },
 } as const
