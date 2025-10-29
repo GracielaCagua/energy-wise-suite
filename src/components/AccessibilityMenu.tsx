@@ -1,0 +1,140 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useAccessibility } from "@/contexts/AccessibilityContext";
+import { Accessibility, Eye, Ear, Hand, Brain, Check } from "lucide-react";
+import { toast } from "sonner";
+
+const perfiles = [
+  {
+    value: "ninguna",
+    label: "Ninguno",
+    description: "Interfaz estándar sin ajustes especiales",
+    icon: Accessibility,
+  },
+  {
+    value: "visual",
+    label: "Discapacidad Visual",
+    description: "Texto grande, alto contraste, compatibilidad con lectores de pantalla",
+    icon: Eye,
+  },
+  {
+    value: "auditiva",
+    label: "Discapacidad Auditiva",
+    description: "Alertas visuales reforzadas, sin dependencia de audio",
+    icon: Ear,
+  },
+  {
+    value: "motriz",
+    label: "Discapacidad Motriz",
+    description: "Áreas de clic más grandes, navegación por teclado mejorada",
+    icon: Hand,
+  },
+  {
+    value: "cognitiva",
+    label: "Discapacidad Cognitiva",
+    description: "Contenido simplificado, instrucciones claras, menos distracciones",
+    icon: Brain,
+  },
+];
+
+export const AccessibilityMenu = () => {
+  const { perfil, setPerfil, aplicarPerfil } = useAccessibility();
+  const [open, setOpen] = useState(false);
+  const [tempPerfil, setTempPerfil] = useState(perfil);
+
+  const handleApply = () => {
+    setPerfil(tempPerfil as any);
+    aplicarPerfil();
+    setOpen(false);
+    toast.success("Perfil de accesibilidad aplicado correctamente");
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon"
+          className="fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg z-50 bg-primary text-primary-foreground hover:bg-primary/90"
+          aria-label="Menú de accesibilidad"
+        >
+          <Accessibility className="h-6 w-6" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="text-2xl font-bold">Accesibilidad</SheetTitle>
+          <SheetDescription>
+            Personaliza la interfaz según tus necesidades. Cumple con WCAG 2.2 nivel AA.
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="mt-6">
+          <RadioGroup value={tempPerfil} onValueChange={(value) => setTempPerfil(value as any)}>
+            <div className="space-y-4">
+              {perfiles.map((perfil) => {
+                const Icon = perfil.icon;
+                return (
+                  <div
+                    key={perfil.value}
+                    className={`relative flex items-start space-x-3 rounded-lg border p-4 transition-all hover:border-primary ${
+                      tempPerfil === perfil.value
+                        ? "border-primary bg-primary/5"
+                        : "border-border"
+                    }`}
+                  >
+                    <RadioGroupItem
+                      value={perfil.value}
+                      id={perfil.value}
+                      className="mt-1"
+                    />
+                    <div className="flex-1 space-y-1">
+                      <Label
+                        htmlFor={perfil.value}
+                        className="flex items-center gap-2 font-medium cursor-pointer"
+                      >
+                        <Icon className="h-5 w-5 text-primary" />
+                        {perfil.label}
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        {perfil.description}
+                      </p>
+                    </div>
+                    {tempPerfil === perfil.value && (
+                      <Check className="h-5 w-5 text-primary mt-1" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </RadioGroup>
+
+          <div className="mt-6 flex gap-3">
+            <Button onClick={handleApply} className="flex-1">
+              Aplicar Cambios
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setTempPerfil(perfil);
+                setOpen(false);
+              }}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+};
