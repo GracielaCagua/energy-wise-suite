@@ -43,62 +43,48 @@ export const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <Link 
-          to="/" 
-          className="flex items-center gap-2 font-bold text-xl hover:opacity-80 transition-opacity"
-          onClick={() => trackClick("logo")}
-        >
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
-            <Leaf className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            EcoSense
-          </span>
-        </Link>
+    <>
+      <Dialog open={showSyncBanner} onOpenChange={setShowSyncBanner}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Preferencia local detectada</DialogTitle>
+            <DialogDescription>
+              Se encontró una preferencia de accesibilidad guardada localmente que difiere de la configurada en tu cuenta.
+              ¿Deseas usar tu preferencia local (se sincronizará con tu cuenta) o mantener la preferencia de tu cuenta?
+            </DialogDescription>
+          </DialogHeader>
 
-        <nav className="flex items-center gap-2">
-          {/* Sync modal: show when user has local profile different from account profile */}
-          <Dialog open={showSyncBanner} onOpenChange={setShowSyncBanner}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Preferencia local detectada</DialogTitle>
-                <DialogDescription>
-                  Se encontró una preferencia de accesibilidad guardada localmente que difiere de la configurada en tu cuenta.
-                  ¿Deseas usar tu preferencia local (se sincronizará con tu cuenta) o mantener la preferencia de tu cuenta?
-                </DialogDescription>
-              </DialogHeader>
+          <DialogFooter>
+            <div className="flex gap-2 w-full">
+              <Button
+                className="flex-1"
+                onClick={() => {
+                  if (localPerfil) {
+                    aplicarPerfil(localPerfil as any);
+                    notify({ title: "Preferencia sincronizada", description: "Se aplicó y sincronizó tu preferencia local." });
+                  }
+                  setShowSyncBanner(false);
+                }}
+              >
+                Usar local
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={async () => {
+                  await cargarPerfil(true);
+                  notify({ title: "Preferencia de cuenta aplicada", description: "Se aplicó la preferencia almacenada en tu cuenta." });
+                  setShowSyncBanner(false);
+                }}
+              >
+                Usar cuenta
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-              <DialogFooter>
-                <div className="flex gap-2 w-full">
-                  <Button
-                    className="flex-1"
-                    onClick={() => {
-                      if (localPerfil) {
-                        aplicarPerfil(localPerfil as any);
-                        notify({ title: "Preferencia sincronizada", description: "Se aplicó y sincronizó tu preferencia local." });
-                      }
-                      setShowSyncBanner(false);
-                    }}
-                  >
-                    Usar local
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={async () => {
-                      await cargarPerfil(true);
-                      notify({ title: "Preferencia de cuenta aplicada", description: "Se aplicó la preferencia almacenada en tu cuenta." });
-                      setShowSyncBanner(false);
-                    }}
-                  >
-                    Usar cuenta
-                  </Button>
-                </div>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+      <nav className="flex items-center gap-2">
           {/* Current profile indicator */}
           <div className="mr-2 px-3 py-1 rounded-md border bg-white/50 text-sm hidden sm:flex items-center">
             <span className="font-medium mr-2">Perfil:</span>
@@ -175,7 +161,6 @@ export const Header = () => {
             </Button>
           )}
         </nav>
-      </div>
-    </header>
+      </>
   );
 };

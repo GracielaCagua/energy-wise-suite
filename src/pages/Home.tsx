@@ -1,8 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { useMetrics } from "@/hooks/useMetrics";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useRef } from "react";
@@ -106,9 +104,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-
+    <div className="space-y-0 -mx-4 md:-mx-6 -my-6">
       {/* Hero Section */}
       <section className="relative py-20 md:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-accent/5 to-background -z-10" />
@@ -224,8 +220,6 @@ export default function Home() {
           </Card>
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 }

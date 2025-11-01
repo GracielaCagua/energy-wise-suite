@@ -24,26 +24,21 @@ export const Footer = () => {
 
           {/* Links */}
           <div className="space-y-3">
-            <h3 className="font-semibold">Recursos</h3>
+            <h3 className="font-semibold">Legal</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <a href="#" className="hover:text-primary transition-colors">
-                  Guía de uso
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-primary transition-colors">
+                <a href="/privacy" className="hover:text-primary transition-colors">
                   Política de privacidad
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-colors">
+                <a href="/terms" className="hover:text-primary transition-colors">
                   Términos de servicio
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-colors">
-                  Accesibilidad WCAG 2.2
+                <a href="/contact" className="hover:text-primary transition-colors">
+                  Contacto
                 </a>
               </li>
             </ul>
