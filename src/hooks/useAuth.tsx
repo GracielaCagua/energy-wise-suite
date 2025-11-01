@@ -98,8 +98,36 @@ export const useAuth = () => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      // Try to fetch the profile id for this email so we can check lockout state
+      let profileId: string | null = null;
+      try {
+        const { data: pData, error: pErr } = await supabase.from('profiles').select('id').eq('email', email).maybeSingle();
+        if (!pErr && pData) profileId = (pData as any).id;
+      } catch (e) {
+        console.warn('Could not lookup profile for lock check', e);
+      }
+
+      // If we found a profile id, ask the DB if the user is currently locked
+      if (profileId) {
+        try {
+          const { data: locked, error: lockedErr } = await (supabase as any).rpc('user_locked', { p_user: profileId, p_window_minutes: 15, p_max_attempts: 3 });
+          if (!lockedErr) {
+            // RPC may return boolean directly, or array; normalize
+            const isLocked = Array.isArray(locked) ? !!locked[0] : !!locked;
+            if (isLocked) {
+              try {
+                await supabase.from('metricas_usabilidad').insert({ user_id: profileId, formulario: 'auth', accion: 'login_locked', metadata: { reason: 'too_many_failed_attempts' } });
+              } catch (e) {}
+              throw new Error('Cuenta bloqueada temporalmente por múltiples intentos fallidos. Intenta de nuevo más tarde.');
+            }
+          }
+        } catch (e) {
+          console.warn('Lock check rpc failed', e);
+        }
+      }
+
       const start = Date.now();
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -107,7 +135,7 @@ export const useAuth = () => {
       const duration = Date.now() - start;
       try {
         await supabase.from('metricas_usabilidad').insert({
-          user_id: null,
+          user_id: profileId,
           formulario: 'auth',
           accion: 'db_latency_signin',
           metadata: { ms: duration, success: !error }
@@ -116,7 +144,24 @@ export const useAuth = () => {
         console.warn('Could not record signin latency metric', e);
       }
 
-      if (error) throw error;
+      if (error) {
+        // Login failed: record a generic metric (we cannot reliably insert into login_attempts for unauthenticated attempts)
+        try {
+          await supabase.from('metricas_usabilidad').insert({ user_id: profileId, formulario: 'auth', accion: 'login_failed', metadata: { email, msg: error.message } });
+        } catch (e) {}
+        throw error;
+      }
+
+      // On success, record a successful login attempt in login_attempts if possible
+        try {
+        const sessionUserId = data?.session?.user?.id ?? profileId;
+        if (sessionUserId) {
+          await (supabase as any).from('login_attempts').insert({ user_id: sessionUserId, ip: null, user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null, succeeded: true });
+        }
+      } catch (e) {
+        // ignore; may fail if migration/policy not applied
+        console.warn('Could not write login_attempts row (migration/policy may not be applied)', e);
+      }
 
       toast.success("¡Bienvenido a EcoSense!");
       return { error: null };

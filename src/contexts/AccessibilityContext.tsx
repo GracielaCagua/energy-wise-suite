@@ -9,15 +9,19 @@ interface AccessibilityContextType {
   setPerfil: (perfil: PerfilAccesibilidad) => void;
   aplicarPerfil: (perfil?: PerfilAccesibilidad) => void;
   cargarPerfil: (apply?: boolean) => Promise<PerfilAccesibilidad | null>;
+  dark: boolean;
+  toggleDark: () => void;
 }
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
 
 export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [perfil, setPerfil] = useState<PerfilAccesibilidad>("ninguna");
+  const [dark, setDark] = useState<boolean>(false);
   const { user } = useAuth();
 
   const LOCAL_KEY = "accessibility_perfil";
+  const LOCAL_THEME = "theme_pref";
 
   // On mount, load profile from localStorage if present (for unauthenticated users)
   useEffect(() => {
@@ -27,6 +31,17 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
         const parsed = stored as PerfilAccesibilidad;
         setPerfil(parsed);
         aplicarPerfilDOM(parsed);
+      }
+      // load theme preference (dark/light) -- fall back to system preference
+      const themeStored = localStorage.getItem(LOCAL_THEME);
+      if (themeStored) {
+        const isDark = themeStored === 'dark';
+        setDark(isDark);
+        applyThemeDOM(isDark);
+      } else {
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setDark(prefersDark);
+        applyThemeDOM(prefersDark);
       }
     } catch (error) {
       console.warn("Could not read accessibility profile from localStorage:", error);
@@ -117,6 +132,18 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const applyThemeDOM = (isDark: boolean) => {
+    const root = document.documentElement;
+    if (isDark) root.classList.add('dark'); else root.classList.remove('dark');
+  };
+
+  const toggleDark = () => {
+    const next = !dark;
+    setDark(next);
+    try { localStorage.setItem(LOCAL_THEME, next ? 'dark' : 'light'); } catch {}
+    applyThemeDOM(next);
+  };
+
   const aplicarPerfilDOM = (perfilActual: PerfilAccesibilidad) => {
     const root = document.documentElement;
     
@@ -163,7 +190,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   return (
-    <AccessibilityContext.Provider value={{ perfil, setPerfil, aplicarPerfil, cargarPerfil }}>
+    <AccessibilityContext.Provider value={{ perfil, setPerfil, aplicarPerfil, cargarPerfil, dark, toggleDark }}>
       {children}
     </AccessibilityContext.Provider>
   );

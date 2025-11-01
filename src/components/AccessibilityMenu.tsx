@@ -11,7 +11,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
-import { Accessibility, Eye, Ear, Hand, Brain, Check } from "lucide-react";
+import { Accessibility, Eye, Ear, Hand, Brain, Check, Sun, Moon } from "lucide-react";
+import { useMetrics } from "@/hooks/useMetrics";
 import { toast } from "sonner";
 
 const perfiles = [
@@ -48,7 +49,8 @@ const perfiles = [
 ];
 
 export const AccessibilityMenu = () => {
-  const { perfil, setPerfil, aplicarPerfil } = useAccessibility();
+  const { perfil, setPerfil, aplicarPerfil, dark, toggleDark } = useAccessibility();
+  const { trackClick } = useMetrics('accessibility');
   const [open, setOpen] = useState(false);
   const [tempPerfil, setTempPerfil] = useState(perfil);
 
@@ -88,6 +90,18 @@ export const AccessibilityMenu = () => {
         </SheetHeader>
 
         <div className="mt-6">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">Tema</div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { toggleDark(); trackClick('toggle_theme'); toast.success(`Tema ${dark ? 'claro' : 'oscuro'} activado`); }}
+              aria-pressed={dark}
+            >
+              {dark ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
+              {dark ? 'Claro' : 'Oscuro'}
+            </Button>
+          </div>
           <RadioGroup value={tempPerfil} onValueChange={(value) => setTempPerfil(value as any)}>
             <div className="space-y-4">
               {perfiles.map((perfil) => {

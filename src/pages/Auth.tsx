@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Leaf, ArrowLeft } from "lucide-react";
+import { Leaf, ArrowLeft, Check, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -18,10 +18,14 @@ const loginSchema = z.object({
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
 });
 
+const passwordRulesRegex = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}/;
+
 const registerSchema = z.object({
   nombre: z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(100),
   email: z.string().email("Email inválido").max(255),
-  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres").refine((p) => passwordRulesRegex.test(p), {
+    message: "La contraseña debe incluir mayúsculas, minúsculas, números y un carácter especial",
+  }),
   confirmPassword: z.string(),
   acceptedTerms: z.literal(true, { errorMap: () => ({ message: 'Debes aceptar los términos y la política de privacidad' }) }),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -48,6 +52,13 @@ export default function Auth() {
     acceptedTerms: false,
   });
   const [registerErrors, setRegisterErrors] = useState<Record<string, string>>({});
+  const [passwordChecks, setPasswordChecks] = useState({
+    length: false,
+    lower: false,
+    upper: false,
+    number: false,
+    special: false,
+  });
   const [resetEmail, setResetEmail] = useState("");
   const [resetError, setResetError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
@@ -56,7 +67,7 @@ export default function Auth() {
   const [registerStart, setRegisterStart] = useState<number | null>(null);
 
   // Lockout policy: after this many failed attempts, block for LOCK_DURATION_MS
-  const LOCK_THRESHOLD = 5;
+  const LOCK_THRESHOLD = 3;
   const LOCK_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
@@ -143,8 +154,8 @@ export default function Auth() {
         const seconds = Math.floor((Date.now() - loginStart) / 1000);
         trackMetric({ accion: 'login_duration', metadata: { seconds } });
       }
-      // track login success
-      trackMetric({ accion: 'login_success', metadata: { email: loginData.email, timestamp: new Date().toISOString() } });
+  // track login success (include rememberMe flag)
+  trackMetric({ accion: 'login_success', metadata: { email: loginData.email, remember: !!rememberMe, timestamp: new Date().toISOString() } });
       try { localStorage.setItem("rememberMe", JSON.stringify(rememberMe)); } catch {}
       navigate("/dashboard");
     } catch (e: any) {
@@ -157,6 +168,7 @@ export default function Auth() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     trackClick("register_submit");
+    // run zod schema first
     const result = registerSchema.safeParse(registerData);
     if (!result.success) {
       const errs: Record<string, string> = {};
@@ -166,6 +178,24 @@ export default function Auth() {
       setRegisterErrors(errs);
       const firstKey = Object.keys(errs)[0];
       const el = document.getElementById(`register-${firstKey}`) as HTMLElement | null;
+      el?.focus();
+      return;
+    }
+
+    // additional safety: ensure password meets checks (should be redundant with zod but gives UX safety)
+    const pw = registerData.password || "";
+    const checks = {
+      length: pw.length >= 8,
+      lower: /[a-z]/.test(pw),
+      upper: /[A-Z]/.test(pw),
+      number: /\d/.test(pw),
+      special: /[^A-Za-z0-9]/.test(pw),
+    };
+    const allOk = Object.values(checks).every(Boolean);
+    if (!allOk) {
+      setPasswordChecks(checks);
+      setRegisterErrors({ password: 'La contraseña no cumple los requisitos de seguridad' });
+      const el = document.getElementById('register-password') as HTMLElement | null;
       el?.focus();
       return;
     }
@@ -184,8 +214,8 @@ export default function Auth() {
           const seconds = Math.floor((Date.now() - registerStart) / 1000);
           trackMetric({ accion: 'register_duration', metadata: { seconds } });
         }
-        // track registration success
-        trackMetric({ accion: 'register_success', metadata: { email: registerData.email, timestamp: new Date().toISOString() } });
+  // track registration success (include terms acceptance)
+  trackMetric({ accion: 'register_success', metadata: { email: registerData.email, acceptedTerms: !!registerData.acceptedTerms, timestamp: new Date().toISOString() } });
   setRegisterData({ nombre: "", email: "", password: "", confirmPassword: "", acceptedTerms: false });
       }
     } finally {
@@ -383,11 +413,28 @@ export default function Auth() {
                       aria-invalid={!!registerErrors.password}
                       aria-describedby={registerErrors.password ? 'register-password-error' : undefined}
                     />
-                    {registerErrors.password ? (
-                      <p id="register-password-error" className="text-xs text-destructive mt-1">{registerErrors.password}</p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground mt-1">La contraseña debe tener al menos 6 caracteres.</p>
-                    )}
+                    <div className="mt-2">
+                      <ul className="text-sm space-y-1">
+                        <li className={`flex items-center gap-2 ${registerData.password.length >= 8 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                          {registerData.password.length >= 8 ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />} Mínimo 8 caracteres
+                        </li>
+                        <li className={`flex items-center gap-2 ${/[a-z]/.test(registerData.password) ? 'text-green-600' : 'text-muted-foreground'}`}>
+                          {/[a-z]/.test(registerData.password) ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />} Letra minúscula
+                        </li>
+                        <li className={`flex items-center gap-2 ${/[A-Z]/.test(registerData.password) ? 'text-green-600' : 'text-muted-foreground'}`}>
+                          {/[A-Z]/.test(registerData.password) ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />} Letra MAYÚSCULA
+                        </li>
+                        <li className={`flex items-center gap-2 ${/\d/.test(registerData.password) ? 'text-green-600' : 'text-muted-foreground'}`}>
+                          {/\d/.test(registerData.password) ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />} Número
+                        </li>
+                        <li className={`flex items-center gap-2 ${/[^A-Za-z0-9]/.test(registerData.password) ? 'text-green-600' : 'text-muted-foreground'}`}>
+                          {/[^A-Za-z0-9]/.test(registerData.password) ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />} Carácter especial
+                        </li>
+                      </ul>
+                      {registerErrors.password && (
+                        <p id="register-password-error" className="text-xs text-destructive mt-1">{registerErrors.password}</p>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="register-confirm">Confirmar Contraseña</Label>
@@ -420,7 +467,12 @@ export default function Auth() {
             </Tabs>
 
             <div className="mt-6 pt-6 border-t">
-              <details className="space-y-4">
+              <details className="space-y-4" onToggle={(e) => {
+                const el = e.target as HTMLDetailsElement;
+                if (el.open) {
+                  trackMetric({ accion: 'help_opened', metadata: { area: 'auth_reset', timestamp: new Date().toISOString() } });
+                }
+              }}>
                 <summary className="text-sm text-muted-foreground cursor-pointer hover:text-primary">
                   ¿Olvidaste tu contraseña?
                 </summary>

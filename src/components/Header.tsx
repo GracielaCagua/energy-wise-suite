@@ -1,6 +1,14 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Leaf, LogOut, LayoutDashboard, Shield, Bell } from "lucide-react";
+import { Leaf, LayoutDashboard, Shield, Bell } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import useNotify from "@/hooks/useNotify";
 import { useAuth } from "@/hooks/useAuth";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
@@ -108,8 +116,30 @@ export const Header = () => {
             <Bell className="h-4 w-4" />
             <span className="sr-only">Probar notificación</span>
           </Button>
+          {/* Theme toggle moved to AccessibilityMenu */}
           {user ? (
             <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="rounded-full p-0">
+                    <Avatar>
+                      <AvatarFallback>
+                        {user?.email ? user.email.split("@")[0].slice(0,2).toUpperCase() : (user?.id?.slice(0,2).toUpperCase() ?? "U")}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" onClick={() => trackClick('profile_link')}>Mi perfil</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" onClick={() => trackClick('dashboard_link')}>Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => { trackClick('logout_button'); handleSignOut(); }}>Cerrar sesión</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 variant="ghost"
                 asChild
@@ -134,14 +164,7 @@ export const Header = () => {
                 </Button>
               )}
 
-              <Button
-                variant="outline"
-                onClick={handleSignOut}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Cerrar Sesión</span>
-              </Button>
+              {/* Removed duplicate logout button (now accessible via the avatar dropdown) */}
             </>
           ) : (
             <Button
