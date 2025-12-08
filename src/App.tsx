@@ -4,7 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger, SidebarInset, useSidebar } from "@/components/ui/sidebar";
+import { Accessibility } from "lucide-react";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -21,6 +22,18 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const CollapsibleLogo = () => {
+  const { state } = useSidebar();
+  if (state !== "collapsed") return null;
+  return (
+    <div className="flex items-center gap-2 ml-2">
+      <SidebarTrigger className="mr-2" />
+      <Accessibility className="h-6 w-6 text-primary" />
+      <span className="font-semibold hidden md:inline">EcoSense</span>
+    </div>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -34,7 +47,7 @@ const App = () => (
               <SidebarInset className="flex flex-col flex-1">
                 <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                   <div className="flex h-14 items-center gap-4 px-4">
-                    <SidebarTrigger className="-ml-1" />
+                    <CollapsibleLogo />
                     <div className="flex-1" />
                     <Header />
                   </div>

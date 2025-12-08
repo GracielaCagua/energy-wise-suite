@@ -69,13 +69,27 @@ export const AccessibilityMenu = () => {
     toast.success("Perfil de accesibilidad aplicado correctamente");
   };
 
+  const [highContrast, setHighContrast] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (highContrast) {
+        document.documentElement.setAttribute("data-contrast", "high");
+      } else {
+        document.documentElement.removeAttribute("data-contrast");
+      }
+    } catch (e) {
+      // ignore (SSR or safety)
+    }
+  }, [highContrast]);
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
           variant="outline"
           size="icon"
-          className="fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg z-50 bg-primary text-primary-foreground hover:bg-primary/90"
+          className="fixed bottom-4 right-4 h-16 w-16 rounded-full shadow-lg z-50 bg-primary text-primary-foreground hover:bg-primary/90"
           aria-label="Menú de accesibilidad"
         >
           <Accessibility className="h-6 w-6" />
@@ -111,7 +125,7 @@ export const AccessibilityMenu = () => {
                     key={perfil.value}
                     className={`relative flex items-start space-x-3 rounded-lg border p-4 transition-all hover:border-primary ${
                       tempPerfil === perfil.value
-                        ? "border-primary bg-primary/5"
+                        ? "border-primary bg-primary/20"
                         : "border-border"
                     }`}
                   >
@@ -125,7 +139,7 @@ export const AccessibilityMenu = () => {
                         htmlFor={perfil.value}
                         className="flex items-center gap-2 font-medium cursor-pointer"
                       >
-                        <Icon className="h-5 w-5 text-primary" />
+                        <Icon className="h-5 w-5 text-primary-foreground" />
                         {perfil.label}
                       </Label>
                       <p className="text-sm text-muted-foreground">
@@ -154,6 +168,19 @@ export const AccessibilityMenu = () => {
             >
               Cancelar
             </Button>
+          </div>
+          <div className="mt-4">
+            <Label className="mb-2">Contraste</Label>
+            <div className="flex items-center gap-3">
+              <Button
+                variant={highContrast ? "default" : "outline"}
+                onClick={() => setHighContrast((v) => !v)}
+                size="sm"
+              >
+                {highContrast ? <Check className="h-4 w-4 mr-2" /> : null}
+                Contraste Alto
+              </Button>
+            </div>
           </div>
         </div>
       </SheetContent>

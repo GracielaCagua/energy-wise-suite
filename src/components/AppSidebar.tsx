@@ -1,4 +1,7 @@
-import { Home, LayoutDashboard, Shield, FileText, Scale, Mail, Accessibility } from "lucide-react";
+import { Home, LayoutDashboard, Shield, FileText, Scale, Mail, Accessibility, ChevronDown, ChevronRight } from "lucide-react";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useState } from "react";
+import { useSidebar } from "@/components/ui/sidebar";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -26,6 +29,8 @@ const infoItems = [
 ];
 
 export function AppSidebar() {
+  const [infoOpen, setInfoOpen] = useState(true);
+  const { state } = useSidebar();
   const { user, isAdmin } = useAuth();
 
   const getNavClassName = ({ isActive }: { isActive: boolean }) =>
@@ -35,11 +40,18 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Accessibility className="h-5 w-5 text-primary" />
-          <span className="font-semibold">EcoSense</span>
-        </div>
+      <SidebarHeader className="border-b px-4 py-3 relative">
+        {state !== "collapsed" ? (
+          <>
+            <div className="absolute right-2 top-2">
+              <SidebarTrigger />
+            </div>
+            <div className="flex items-center gap-2">
+              <Accessibility className="h-5 w-5 text-primary" />
+              <span className="font-semibold">EcoSense</span>
+            </div>
+          </>
+        ) : null}
       </SidebarHeader>
 
       <SidebarContent>
@@ -78,16 +90,31 @@ export function AppSidebar() {
           <SidebarGroupLabel>Información</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {infoItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url} className={getNavClassName}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild onClick={() => setInfoOpen((v) => !v)}>
+                  <button className="flex w-full items-center justify-between p-2">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      <span>Información</span>
+                    </div>
+                    <div className="opacity-70">
+                      {infoOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </div>
+                  </button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {infoOpen &&
+                infoItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink to={item.url} className={getNavClassName}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
