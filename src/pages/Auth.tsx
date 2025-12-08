@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Leaf, ArrowLeft, Check, X } from "lucide-react";
+import { Leaf, ArrowLeft, Check, X, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -38,6 +38,9 @@ const resetSchema = z.object({
 });
 
 export default function Auth() {
+    const [showLoginPassword, setShowLoginPassword] = useState(false);
+    const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+    const [showRegisterConfirm, setShowRegisterConfirm] = useState(false);
   const navigate = useNavigate();
   const { user, signIn, signUp, resetPassword } = useAuth();
   const { trackClick, trackMetric } = useMetrics("auth");
@@ -131,7 +134,9 @@ export default function Auth() {
         try {
           const raw = localStorage.getItem(attemptKey);
           const now = Date.now();
-          let obj = raw ? JSON.parse(raw) : { count: 0, firstAttempt: now };
+          const obj = raw ? JSON.parse(raw) : { count: 0, firstAttempt: now };
+          // increment attempt counter
+         /// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           obj.count = (obj.count || 0) + 1;
           if (obj.count >= LOCK_THRESHOLD) {
             obj.lockedUntil = new Date(now + LOCK_DURATION_MS).toISOString();
@@ -149,17 +154,18 @@ export default function Auth() {
       }
 
       // success
-      try { localStorage.removeItem(attemptKey); } catch {}
+      try { localStorage.removeItem(attemptKey); } catch (e) { /* ignore persistence errors */ }
       if (loginStart) {
         const seconds = Math.floor((Date.now() - loginStart) / 1000);
         trackMetric({ accion: 'login_duration', metadata: { seconds } });
       }
   // track login success (include rememberMe flag)
   trackMetric({ accion: 'login_success', metadata: { email: loginData.email, remember: !!rememberMe, timestamp: new Date().toISOString() } });
-      try { localStorage.setItem("rememberMe", JSON.stringify(rememberMe)); } catch {}
+      try { localStorage.setItem("rememberMe", JSON.stringify(rememberMe)); } catch (e) { /* ignore persistence errors */ }
       navigate("/dashboard");
-    } catch (e: any) {
-      toast.error(e?.message || 'Error al iniciar sesión');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(msg || 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }
@@ -298,20 +304,31 @@ export default function Auth() {
                       <p className="text-xs text-muted-foreground mt-1">Usa el email con el que te registraste.</p>
                     )}
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 relative">
                     <Label htmlFor="login-password">Contraseña</Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      value={loginData.password}
-                      onChange={(e) =>
-                        setLoginData({ ...loginData, password: e.target.value })
-                      }
-                      onFocus={() => { if (!loginStart) { setLoginStart(Date.now()); trackMetric({ accion: 'login_started', metadata: { timestamp: new Date().toISOString() } }); } }}
-                      required
-                      aria-invalid={!!loginErrors.password}
-                      aria-describedby={loginErrors.password ? 'login-password-error' : undefined}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="login-password"
+                        type={showLoginPassword ? "text" : "password"}
+                        value={loginData.password}
+                        onChange={(e) =>
+                          setLoginData({ ...loginData, password: e.target.value })
+                        }
+                        onFocus={() => { if (!loginStart) { setLoginStart(Date.now()); trackMetric({ accion: 'login_started', metadata: { timestamp: new Date().toISOString() } }); } }}
+                        required
+                        aria-invalid={!!loginErrors.password}
+                        aria-describedby={loginErrors.password ? 'login-password-error' : undefined}
+                      />
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
+                        onClick={() => setShowLoginPassword((v) => !v)}
+                        aria-label={showLoginPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      >
+                        {showLoginPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
                     {loginErrors.password ? (
                       <p id="login-password-error" className="text-xs text-destructive mt-1">{loginErrors.password}</p>
                     ) : (
@@ -396,23 +413,34 @@ export default function Auth() {
                       <p className="text-xs text-muted-foreground mt-1">Usa un correo válido; recibirás un email de confirmación.</p>
                     )}
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 relative">
                     <Label htmlFor="register-password">Contraseña</Label>
-                    <Input
-                      id="register-password"
-                      type="password"
-                      value={registerData.password}
-                      onChange={(e) =>
-                        setRegisterData({
-                          ...registerData,
-                          password: e.target.value,
-                        })
-                      }
-                      onFocus={() => { if (!registerStart) setRegisterStart(Date.now()); }}
-                      required
-                      aria-invalid={!!registerErrors.password}
-                      aria-describedby={registerErrors.password ? 'register-password-error' : undefined}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="register-password"
+                        type={showRegisterPassword ? "text" : "password"}
+                        value={registerData.password}
+                        onChange={(e) =>
+                          setRegisterData({
+                            ...registerData,
+                            password: e.target.value,
+                          })
+                        }
+                        onFocus={() => { if (!registerStart) setRegisterStart(Date.now()); }}
+                        required
+                        aria-invalid={!!registerErrors.password}
+                        aria-describedby={registerErrors.password ? 'register-password-error' : undefined}
+                      />
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
+                        onClick={() => setShowRegisterPassword((v) => !v)}
+                        aria-label={showRegisterPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      >
+                        {showRegisterPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
                     <div className="mt-2">
                       <ul className="text-sm space-y-1">
                         <li className={`flex items-center gap-2 ${registerData.password.length >= 8 ? 'text-green-600' : 'text-muted-foreground'}`}>
@@ -436,23 +464,34 @@ export default function Auth() {
                       )}
                     </div>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 relative">
                     <Label htmlFor="register-confirm">Confirmar Contraseña</Label>
-                    <Input
-                      id="register-confirmPassword"
-                      type="password"
-                      value={registerData.confirmPassword}
-                      onChange={(e) =>
-                        setRegisterData({
-                          ...registerData,
-                          confirmPassword: e.target.value,
-                        })
-                      }
-                      onFocus={() => { if (!registerStart) setRegisterStart(Date.now()); }}
-                      required
-                      aria-invalid={!!registerErrors.confirmPassword}
-                      aria-describedby={registerErrors.confirmPassword ? 'register-confirmPassword-error' : undefined}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="register-confirmPassword"
+                        type={showRegisterConfirm ? "text" : "password"}
+                        value={registerData.confirmPassword}
+                        onChange={(e) =>
+                          setRegisterData({
+                            ...registerData,
+                            confirmPassword: e.target.value,
+                          })
+                        }
+                        onFocus={() => { if (!registerStart) setRegisterStart(Date.now()); }}
+                        required
+                        aria-invalid={!!registerErrors.confirmPassword}
+                        aria-describedby={registerErrors.confirmPassword ? 'register-confirmPassword-error' : undefined}
+                      />
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
+                        onClick={() => setShowRegisterConfirm((v) => !v)}
+                        aria-label={showRegisterConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      >
+                        {showRegisterConfirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
                     {registerErrors.confirmPassword ? (
                       <p id="register-confirmPassword-error" className="text-xs text-destructive mt-1">{registerErrors.confirmPassword}</p>
                     ) : (
