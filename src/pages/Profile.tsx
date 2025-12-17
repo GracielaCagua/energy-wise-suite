@@ -59,6 +59,7 @@ export default function Profile() {
     }
 
     // Avoid unnecessary writes
+
     if (profile && (profile.nombre || "") === nuevo) return;
 
     setSaving(true);
@@ -106,6 +107,7 @@ export default function Profile() {
                 <Label>Nombre</Label>
                 <Input value={nombre} onChange={(e) => setNombre(e.target.value)} onBlur={() => saveProfile()} />
               </div>
+
 
               {/* Guardado automático al salir del campo. Los botones de navegación están en la navbar. */}
             </div>

@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Zap, TrendingDown, Calendar, Plus } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
@@ -44,6 +45,7 @@ export default function Dashboard() {
           console.error("Error cargando datos en useEffect:", e);
         }
       })();
+
     }
   }, [user, loading, navigate, viewMode, hoursWindow, daysWindow, selectedDevice]);
 
@@ -67,6 +69,7 @@ export default function Dashboard() {
       console.error("Error loading devices:", error);
       // don't block consumption loading
     }
+    
   };
 
   const cargarConsumo = async () => {
