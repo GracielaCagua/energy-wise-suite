@@ -196,10 +196,10 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export const useAccessibility = () => {
+export function useAccessibility() {
   const context = useContext(AccessibilityContext);
   if (context === undefined) {
     throw new Error("useAccessibility must be used within an AccessibilityProvider");
   }
   return context;
-};
+}

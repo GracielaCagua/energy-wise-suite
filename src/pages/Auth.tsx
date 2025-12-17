@@ -12,6 +12,7 @@ import { Leaf, ArrowLeft, Check, X, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido").max(255),
@@ -38,6 +39,7 @@ const resetSchema = z.object({
 });
 
 export default function Auth() {
+  const { t } = useLanguage();
     const [showLoginPassword, setShowLoginPassword] = useState(false);
     const [showRegisterPassword, setShowRegisterPassword] = useState(false);
     const [showRegisterConfirm, setShowRegisterConfirm] = useState(false);
@@ -269,26 +271,26 @@ export default function Auth() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Bienvenido</CardTitle>
+            <CardTitle>{t('auth')?.welcome_title ?? 'Bienvenido'}</CardTitle>
             <CardDescription>
-              Inicia sesión o crea una cuenta para comenzar
+              {t('auth')?.welcome_description ?? 'Inicia sesión o crea una cuenta para comenzar'}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
-                <TabsTrigger value="register">Registrarse</TabsTrigger>
+                <TabsTrigger value="login">{t('auth')?.login_tab ?? 'Iniciar Sesión'}</TabsTrigger>
+                <TabsTrigger value="register">{t('auth')?.register_tab ?? 'Registrarse'}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
+                    <Label htmlFor="login-email">{t('auth')?.labels?.email ?? 'Email'}</Label>
                     <Input
                       id="login-email"
                       type="email"
-                      placeholder="tu@email.com"
+                      placeholder={t('auth')?.email_placeholder ?? 'tu@email.com'}
                       value={loginData.email}
                       onChange={(e) =>
                         setLoginData({ ...loginData, email: e.target.value })
@@ -301,11 +303,11 @@ export default function Auth() {
                     {loginErrors.email ? (
                       <p id="login-email-error" className="text-xs text-destructive mt-1">{loginErrors.email}</p>
                     ) : (
-                      <p className="text-xs text-muted-foreground mt-1">Usa el email con el que te registraste.</p>
+                      <p className="text-xs text-muted-foreground mt-1">{t('auth')?.email_note ?? 'Usa el email con el que te registraste.'}</p>
                     )}
                   </div>
                   <div className="space-y-2 relative">
-                    <Label htmlFor="login-password">Contraseña</Label>
+                    <Label htmlFor="login-password">{t('auth')?.labels?.password ?? 'Contraseña'}</Label>
                     <div className="relative">
                       <Input
                         id="login-password"
@@ -324,7 +326,7 @@ export default function Auth() {
                         tabIndex={-1}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
                         onClick={() => setShowLoginPassword((v) => !v)}
-                        aria-label={showLoginPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                        aria-label={showLoginPassword ? (t('auth')?.aria?.hide_password ?? 'Ocultar contraseña') : (t('auth')?.aria?.show_password ?? 'Mostrar contraseña')}
                       >
                         {showLoginPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
@@ -332,7 +334,7 @@ export default function Auth() {
                     {loginErrors.password ? (
                       <p id="login-password-error" className="text-xs text-destructive mt-1">{loginErrors.password}</p>
                     ) : (
-                      <p className="text-xs text-muted-foreground mt-1">Mínimo 6 caracteres.</p>
+                      <p className="text-xs text-muted-foreground mt-1">{t('auth')?.login_password_note ?? 'Mínimo 6 caracteres.'}</p>
                     )}
                   </div>
                   <div className="flex items-center justify-between">
@@ -348,12 +350,12 @@ export default function Auth() {
                         htmlFor="remember"
                         className="text-sm font-normal cursor-pointer"
                       >
-                        Recordarme
+                        {t('auth')?.remember_label ?? 'Recordarme'}
                       </Label>
                     </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Iniciando..." : "Iniciar Sesión"}
+                    {loading ? (t('auth')?.login_loading ?? 'Iniciando...') : (t('auth')?.login_button ?? 'Iniciar Sesión')}
                   </Button>
                 </form>
               </TabsContent>
@@ -361,11 +363,11 @@ export default function Auth() {
               <TabsContent value="register">
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="register-nombre">Nombre Completo</Label>
+                    <Label htmlFor="register-nombre">{t('auth')?.labels?.nombre ?? 'Nombre Completo'}</Label>
                     <Input
                       id="register-nombre"
                       type="text"
-                      placeholder="Tu nombre"
+                      placeholder={t('auth')?.labels?.nombre_placeholder ?? 'Tu nombre'}
                       value={registerData.nombre}
                       onChange={(e) =>
                         setRegisterData({ ...registerData, nombre: e.target.value })
@@ -378,7 +380,7 @@ export default function Auth() {
                     {registerErrors.nombre ? (
                       <p id="register-nombre-error" className="text-xs text-destructive mt-1">{registerErrors.nombre}</p>
                     ) : (
-                      <p className="text-xs text-muted-foreground mt-1">Introduce tu nombre completo para personalizar la cuenta.</p>
+                      <p className="text-xs text-muted-foreground mt-1">{t('auth')?.labels?.nombre_note ?? 'Introduce tu nombre completo para personalizar la cuenta.'}</p>
                     )}
                   </div>
                   <div className="flex items-center space-x-2">
@@ -388,16 +390,16 @@ export default function Auth() {
                       onCheckedChange={(v) => setRegisterData({ ...registerData, acceptedTerms: Boolean(v) })}
                     />
                     <Label htmlFor="register-terms" className="text-sm">
-                      Acepto los <a className="underline" href="/terms" target="_blank" rel="noreferrer">términos</a> y la <a className="underline" href="/privacy" target="_blank" rel="noreferrer">política de privacidad</a>
+                      {t('auth')?.labels?.terms_text ?? (<><a className="underline" href="/terms" target="_blank" rel="noreferrer">términos</a> y la <a className="underline" href="/privacy" target="_blank" rel="noreferrer">política de privacidad</a></>)}
                     </Label>
                   </div>
                   {registerErrors.acceptedTerms && <p className="text-xs text-destructive mt-1">{registerErrors.acceptedTerms}</p>}
                   <div className="space-y-2">
-                    <Label htmlFor="register-email">Email</Label>
+                    <Label htmlFor="register-email">{t('auth')?.labels?.email ?? 'Email'}</Label>
                     <Input
                       id="register-email"
                       type="email"
-                      placeholder="tu@email.com"
+                      placeholder={t('auth')?.email_placeholder ?? 'tu@email.com'}
                       value={registerData.email}
                       onChange={(e) =>
                         setRegisterData({ ...registerData, email: e.target.value })
@@ -410,11 +412,11 @@ export default function Auth() {
                     {registerErrors.email ? (
                       <p id="register-email-error" className="text-xs text-destructive mt-1">{registerErrors.email}</p>
                     ) : (
-                      <p className="text-xs text-muted-foreground mt-1">Usa un correo válido; recibirás un email de confirmación.</p>
+                      <p className="text-xs text-muted-foreground mt-1">{t('auth')?.register_email_note ?? 'Usa un correo válido; recibirás un email de confirmación.'}</p>
                     )}
                   </div>
                   <div className="space-y-2 relative">
-                    <Label htmlFor="register-password">Contraseña</Label>
+                    <Label htmlFor="register-password">{t('auth')?.labels?.password ?? 'Contraseña'}</Label>
                     <div className="relative">
                       <Input
                         id="register-password"
@@ -436,7 +438,7 @@ export default function Auth() {
                         tabIndex={-1}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
                         onClick={() => setShowRegisterPassword((v) => !v)}
-                        aria-label={showRegisterPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                        aria-label={showRegisterPassword ? (t('auth')?.aria?.hide_password ?? 'Ocultar contraseña') : (t('auth')?.aria?.show_password ?? 'Mostrar contraseña')}
                       >
                         {showRegisterPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
@@ -444,19 +446,19 @@ export default function Auth() {
                     <div className="mt-2">
                       <ul className="text-sm space-y-1">
                         <li className={`flex items-center gap-2 ${registerData.password.length >= 8 ? 'text-green-600' : 'text-muted-foreground'}`}>
-                          {registerData.password.length >= 8 ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />} Mínimo 8 caracteres
+                          {registerData.password.length >= 8 ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />} {t('auth')?.pw_checks?.length ?? 'Mínimo 8 caracteres'}
                         </li>
                         <li className={`flex items-center gap-2 ${/[a-z]/.test(registerData.password) ? 'text-green-600' : 'text-muted-foreground'}`}>
-                          {/[a-z]/.test(registerData.password) ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />} Letra minúscula
+                          {/[a-z]/.test(registerData.password) ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />} {t('auth')?.pw_checks?.lower ?? 'Letra minúscula'}
                         </li>
                         <li className={`flex items-center gap-2 ${/[A-Z]/.test(registerData.password) ? 'text-green-600' : 'text-muted-foreground'}`}>
-                          {/[A-Z]/.test(registerData.password) ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />} Letra MAYÚSCULA
+                          {/[A-Z]/.test(registerData.password) ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />} {t('auth')?.pw_checks?.upper ?? 'Letra MAYÚSCULA'}
                         </li>
                         <li className={`flex items-center gap-2 ${/\d/.test(registerData.password) ? 'text-green-600' : 'text-muted-foreground'}`}>
-                          {/\d/.test(registerData.password) ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />} Número
+                          {/\d/.test(registerData.password) ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />} {t('auth')?.pw_checks?.number ?? 'Número'}
                         </li>
                         <li className={`flex items-center gap-2 ${/[^A-Za-z0-9]/.test(registerData.password) ? 'text-green-600' : 'text-muted-foreground'}`}>
-                          {/[^A-Za-z0-9]/.test(registerData.password) ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />} Carácter especial
+                          {/[^A-Za-z0-9]/.test(registerData.password) ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />} {t('auth')?.pw_checks?.special ?? 'Carácter especial'}
                         </li>
                       </ul>
                       {registerErrors.password && (

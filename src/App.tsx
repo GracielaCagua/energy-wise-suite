@@ -1,9 +1,12 @@
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
+import { LanguageProvider, useLanguage } from "@/contexts/LanguageContext";
+import useNotify from "@/hooks/useNotify";
 import { SidebarProvider, SidebarTrigger, SidebarInset, useSidebar } from "@/components/ui/sidebar";
 import { Accessibility } from "lucide-react";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -22,6 +25,38 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const ShortcutsManager: React.FC = () => {
+  const { toggleLang } = useLanguage();
+  const { notify } = useNotify();
+
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const isCmd = e.ctrlKey || e.metaKey;
+      // focus search on '/'
+      if (e.key === "/") {
+        const el = document.getElementById('global-search') as HTMLInputElement | null;
+        if (el) { e.preventDefault(); el.focus(); el.select(); }
+      }
+      // focus search on Cmd/Ctrl+K
+      if (isCmd && e.key.toLowerCase() === 'k') {
+        const el = document.getElementById('global-search') as HTMLInputElement | null;
+        if (el) { e.preventDefault(); el.focus(); el.select(); }
+      }
+      // toggle language on Cmd/Ctrl+Shift+L
+      if (isCmd && e.shiftKey && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        toggleLang();
+        try { notify({ title: 'Idioma cambiado', description: 'Idioma alternado', forceVisual: true }); } catch {}
+      }
+    };
+
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [toggleLang, notify]);
+
+  return null;
+};
+
 const CollapsibleLogo = () => {
   const { state } = useSidebar();
   if (state !== "collapsed") return null;
@@ -37,10 +72,12 @@ const CollapsibleLogo = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AccessibilityProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+      <LanguageProvider>
+        <AccessibilityProvider>
+          <ShortcutsManager />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <SidebarProvider>
             <div className="min-h-screen flex w-full bg-background">
               <AppSidebar />
@@ -73,7 +110,8 @@ const App = () => (
           </SidebarProvider>
           {/* Routes and layout rendered above */}
         </BrowserRouter>
-      </AccessibilityProvider>
+        </AccessibilityProvider>
+      </LanguageProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

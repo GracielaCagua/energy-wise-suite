@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useMetrics } from "@/hooks/useMetrics";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { trackClick, trackMetric } = useMetrics("dashboard");
+  const { t } = useLanguage();
 
   const [consumoData, setConsumoData] = useState<any[]>([]);
   const [dispositivos, setDispositivos] = useState<any[]>([]);
@@ -122,8 +124,8 @@ export default function Dashboard() {
       // no devices -> empty series
       setConsumoData([]);
     } catch (error) {
-      console.error("Error loading consumption:", error);
-      toast.error("Error al cargar datos de consumo");
+    console.error("Error loading consumption:", error);
+    toast.error(t('dashboard')?.messages?.error_load_consumption ?? "Error al cargar datos de consumo");
     } finally {
       setLoadingData(false);
     }
@@ -141,7 +143,7 @@ export default function Dashboard() {
       }).select("*");
 
       if (error) throw error;
-      toast.success("Dispositivo agregado");
+      toast.success(t('dashboard')?.messages?.device_added ?? "Dispositivo agregado");
       setNuevoDispositivo({ nombre: "", potencia_w: "" });
       // If the insert returned the new device, select it and create an initial daily record
       const newDeviceId = data && data[0] ? data[0].id : null;
@@ -165,11 +167,11 @@ export default function Dashboard() {
         }
 
         await cargarConsumo();
-        toast.success("Dispositivo agregado y registro diario inicial creado");
+        toast.success(t('dashboard')?.messages?.device_added_with_record ?? "Dispositivo agregado y registro diario inicial creado");
       }
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message || "Error al agregar dispositivo");
+      toast.error(error.message || (t('dashboard')?.messages?.error_add_device ?? "Error al agregar dispositivo"));
     }
   };
 
@@ -202,41 +204,39 @@ export default function Dashboard() {
 
       <main className="flex-1 container py-8 space-y-8">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Dashboard de Consumo</h1>
-          <p className="text-muted-foreground">
-            Gestiona y visualiza tu consumo energético
-          </p>
+          <h1 className="text-3xl font-bold mb-2">{t('dashboard')?.title ?? 'Dashboard de Consumo'}</h1>
+          <p className="text-muted-foreground">{t('dashboard')?.subtitle ?? 'Gestiona y visualiza tu consumo energético'}</p>
         </div>
 
         {/* Device summary: show only the selected device and current watts */}
         <div className="grid md:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Dispositivo</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard')?.cards?.device ?? 'Dispositivo'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{(dispositivos.find(d => d.id === selectedDevice)?.nombre) || "-"}</div>
-              <p className="text-xs text-muted-foreground">nombre</p>
+              <p className="text-xs text-muted-foreground">{t('dashboard')?.cards?.device_label ?? 'nombre'}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Potencia nominal</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard')?.cards?.rated_power ?? 'Potencia nominal'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{(dispositivos.find(d => d.id === selectedDevice)?.potencia_w ?? 0)} W</div>
-              <p className="text-xs text-muted-foreground">potencia configurada</p>
+              <p className="text-xs text-muted-foreground">{t('dashboard')?.cards?.rated_power_label ?? 'potencia configurada'}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Potencia actual</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard')?.cards?.current_power ?? 'Potencia actual'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{consumoData.length > 0 ? Math.round((Number(consumoData[consumoData.length-1].consumo_kwh ?? 0) * 1000)) : (dispositivos.find(d => d.id === selectedDevice)?.potencia_w ?? 0)} W</div>
-              <p className="text-xs text-muted-foreground">estimación instantánea (W)</p>
+              <p className="text-xs text-muted-foreground">{t('dashboard')?.cards?.current_power_label ?? 'estimación instantánea (W)'}</p>
             </CardContent>
           </Card>
         </div>
@@ -245,11 +245,11 @@ export default function Dashboard() {
         <Card>
           <CardHeader className="flex items-center justify-between">
             <div>
-              <CardTitle>Historial de Consumo</CardTitle>
+              <CardTitle>{t('dashboard')?.history?.title ?? 'Historial de Consumo'}</CardTitle>
               <CardDescription>
                 {viewMode === "hourly"
-                  ? `Últimas ${hoursWindow} horas` 
-                  : `Últimos ${daysWindow} días`}
+                  ? (t('dashboard')?.history?.last_hours ? t('dashboard')?.history?.last_hours.replace('{n}', String(hoursWindow)) : `Últimas ${hoursWindow} horas`)
+                  : (t('dashboard')?.history?.last_days ? t('dashboard')?.history?.last_days.replace('{n}', String(daysWindow)) : `Últimos ${daysWindow} días`)}
               </CardDescription>
             </div>
             <div className="flex items-center gap-3">
@@ -258,7 +258,7 @@ export default function Dashboard() {
                   value={selectedDevice ?? ""}
                   onChange={(e) => { setSelectedDevice(e.target.value || null); setLoadingData(true); }}
                 >
-                  <option value="">Selecciona dispositivo</option>
+                  <option value="">{t('dashboard')?.select_device ?? 'Selecciona dispositivo'}</option>
                   {dispositivos.map((d) => (
                     <option key={d.id} value={d.id}>{d.nombre || d.id}</option>
                   ))}
@@ -269,8 +269,8 @@ export default function Dashboard() {
                 value={viewMode}
                 onChange={(e) => { setViewMode(e.target.value as any); setLoadingData(true); }}
               >
-                <option value="hourly">Horario (por hora)</option>
-                <option value="daily">Diario</option>
+                <option value="hourly">{t('dashboard')?.viewModes?.hourly ?? 'Horario (por hora)'}</option>
+                <option value="daily">{t('dashboard')?.viewModes?.daily ?? 'Diario'}</option>
               </select>
 
               {viewMode === "hourly" ? (
@@ -294,7 +294,7 @@ export default function Dashboard() {
                 <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="fecha" />
-                    <YAxis label={{ value: viewMode === "hourly" ? "Watts (W)" : "kWh", angle: -90, position: 'insideLeft' }} />
+                    <YAxis label={{ value: viewMode === "hourly" ? (t('dashboard')?.chart?.y_hourly ?? 'Watts (W)') : (t('dashboard')?.chart?.y_daily ?? 'kWh'), angle: -90, position: 'insideLeft' }} />
                   <Tooltip />
                     <Line
                       type="monotone"
@@ -305,8 +305,8 @@ export default function Dashboard() {
                     />
                 </LineChart>
               </ResponsiveContainer>
-            ) : (
-              <div className="py-12 text-center text-muted-foreground">No hay datos de consumo aún para el dispositivo seleccionado.</div>
+              ) : (
+              <div className="py-12 text-center text-muted-foreground">{t('dashboard')?.no_data ?? 'No hay datos de consumo aún para el dispositivo seleccionado.'}</div>
             )}
           </CardContent>
         </Card>
@@ -317,20 +317,20 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
-              Mis Dispositivos
+              {t('dashboard')?.devices?.title ?? 'Mis Dispositivos'}
             </CardTitle>
             <CardDescription>
-              Agrega y administra los dispositivos eléctricos asociados a tu cuenta
+              {t('dashboard')?.devices?.description ?? 'Agrega y administra los dispositivos eléctricos asociados a tu cuenta'}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <form onSubmit={handleAgregarDispositivo} className="grid md:grid-cols-3 gap-4 items-end">
                 <div className="space-y-2">
-                  <Label htmlFor="device-nombre">Nombre del dispositivo</Label>
+                  <Label htmlFor="device-nombre">{t('dashboard')?.devices?.labels?.name ?? 'Nombre del dispositivo'}</Label>
                   <Input
                     id="device-nombre"
-                    placeholder="Ej. Nevera"
+                    placeholder={t('dashboard')?.devices?.placeholders?.name ?? 'Ej. Nevera'}
                     value={nuevoDispositivo.nombre}
                     onChange={(e) => setNuevoDispositivo({ ...nuevoDispositivo, nombre: e.target.value })}
                     required
@@ -338,13 +338,13 @@ export default function Dashboard() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="device-potencia">Potencia (W)</Label>
+                  <Label htmlFor="device-potencia">{t('dashboard')?.devices?.labels?.power ?? 'Potencia (W)'}</Label>
                   <Input
                     id="device-potencia"
                     type="number"
                     step="1"
                     min="0"
-                    placeholder="Ej. 1500"
+                    placeholder={t('dashboard')?.devices?.placeholders?.power ?? 'Ej. 1500'}
                     value={nuevoDispositivo.potencia_w}
                     onChange={(e) => setNuevoDispositivo({ ...nuevoDispositivo, potencia_w: e.target.value })}
                   />
@@ -352,7 +352,7 @@ export default function Dashboard() {
 
                 <div>
                   <Button type="submit" className="w-full md:w-auto">
-                    Agregar dispositivo
+                    {t('dashboard')?.devices?.add_button ?? 'Agregar dispositivo'}
                   </Button>
                 </div>
               </form>
@@ -370,7 +370,7 @@ export default function Dashboard() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No hay dispositivos. Agrega uno arriba.</p>
+                <p className="text-sm text-muted-foreground">{t('dashboard')?.devices?.no_devices ?? 'No hay dispositivos. Agrega uno arriba.'}</p>
               )}
             </div>
           </CardContent>

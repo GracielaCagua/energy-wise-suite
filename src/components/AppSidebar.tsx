@@ -16,22 +16,24 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const mainItems = [
-  { title: "Inicio", url: "/", icon: Home },
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, requireAuth: true },
+  { titleKey: 'pages_home', title: 'Inicio', url: "/", icon: Home },
+  { titleKey: 'pages_dashboard', title: 'Dashboard', url: "/dashboard", icon: LayoutDashboard, requireAuth: true },
 ];
 
 const infoItems = [
-  { title: "Privacidad", url: "/privacy", icon: FileText },
-  { title: "Términos", url: "/terms", icon: Scale },
-  { title: "Contacto", url: "/contact", icon: Mail },
+  { titleKey: 'footer_privacy', title: 'Privacidad', url: "/privacy", icon: FileText },
+  { titleKey: 'footer_terms', title: 'Términos', url: "/terms", icon: Scale },
+  { titleKey: 'footer_contact', title: 'Contacto', url: "/contact", icon: Mail },
 ];
 
 export function AppSidebar() {
   const [infoOpen, setInfoOpen] = useState(true);
   const { state } = useSidebar();
   const { user, isAdmin } = useAuth();
+  const { t } = useLanguage();
 
   const getNavClassName = ({ isActive }: { isActive: boolean }) =>
     isActive 
@@ -56,7 +58,7 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navegación</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('sidebar')?.navigation ?? 'Navegación'}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => {
@@ -66,7 +68,7 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <NavLink to={item.url} end className={getNavClassName}>
                         <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
+                        <span>{t('pages')?.find((p:any)=>p.path===item.url)?.label ?? item.title}</span>
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -87,7 +89,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Información</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('sidebar')?.information ?? 'Información'}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -95,7 +97,7 @@ export function AppSidebar() {
                   <button className="flex w-full items-center justify-between p-2">
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4" />
-                      <span>Información</span>
+                      <span>{t('sidebar')?.info ?? 'Información'}</span>
                     </div>
                     <div className="opacity-70">
                       {infoOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -110,7 +112,7 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <NavLink to={item.url} className={getNavClassName}>
                         <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
+                        <span>{t('footer')?.[item.titleKey.replace('footer_','') as any] ?? item.title}</span>
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

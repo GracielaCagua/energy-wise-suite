@@ -1,5 +1,6 @@
 import { useMetrics } from "@/hooks/useMetrics";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ const contactSchema = z.object({
 
 export default function Contact() {
   const { trackPageView, trackClick } = useMetrics("contact");
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     nombre: "",
@@ -41,7 +43,7 @@ export default function Contact() {
       // Simular envío (aquí puedes integrar un servicio de email real)
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      toast.success("¡Mensaje enviado correctamente! Te responderemos pronto.");
+      toast.success(t('contact')?.messages?.sent ?? "¡Mensaje enviado correctamente! Te responderemos pronto.");
       
       // Limpiar formulario
       setFormData({ nombre: "", email: "", mensaje: "" });
@@ -50,8 +52,8 @@ export default function Contact() {
         error.errors.forEach((err) => {
           toast.error(err.message);
         });
-      } else {
-        toast.error("Error al enviar el mensaje. Por favor, intenta de nuevo.");
+        } else {
+        toast.error(t('contact')?.messages?.error_send ?? "Error al enviar el mensaje. Por favor, intenta de nuevo.");
       }
     } finally {
       setLoading(false);
@@ -69,58 +71,54 @@ export default function Contact() {
     <div className="container max-w-6xl py-8">
       <div className="space-y-2 mb-8">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          Contáctanos
+          {t('contact')?.title ?? 'Contáctanos'}
         </h1>
-        <p className="text-muted-foreground text-lg">
-          ¿Tienes alguna pregunta? Estamos aquí para ayudarte.
-        </p>
+        <p className="text-muted-foreground text-lg">{t('contact')?.subtitle ?? '¿Tienes alguna pregunta? Estamos aquí para ayudarte.'}</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-8">
         <Card>
-          <CardHeader>
-            <CardTitle>Envíanos un mensaje</CardTitle>
-            <CardDescription>
-              Completa el formulario y nos pondremos en contacto contigo lo antes posible.
-            </CardDescription>
-          </CardHeader>
+            <CardHeader>
+              <CardTitle>{t('contact')?.form?.title ?? 'Envíanos un mensaje'}</CardTitle>
+              <CardDescription>{t('contact')?.form?.description ?? 'Completa el formulario y nos pondremos en contacto contigo lo antes posible.'}</CardDescription>
+            </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="nombre">Nombre completo</Label>
+                <Label htmlFor="nombre">{t('contact')?.form?.labels?.name ?? 'Nombre completo'}</Label>
                 <Input
                   id="nombre"
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleChange}
-                  placeholder="Tu nombre"
+                  placeholder={t('contact')?.form?.placeholders?.name ?? 'Tu nombre'}
                   required
                   maxLength={100}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Correo electrónico</Label>
+                <Label htmlFor="email">{t('contact')?.form?.labels?.email ?? 'Correo electrónico'}</Label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="tu@email.com"
+                  placeholder={t('contact')?.form?.placeholders?.email ?? 'tu@email.com'}
                   required
                   maxLength={255}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="mensaje">Mensaje</Label>
+                <Label htmlFor="mensaje">{t('contact')?.form?.labels?.message ?? 'Mensaje'}</Label>
                 <Textarea
                   id="mensaje"
                   name="mensaje"
                   value={formData.mensaje}
                   onChange={handleChange}
-                  placeholder="Escribe tu mensaje aquí..."
+                  placeholder={t('contact')?.form?.placeholders?.message ?? 'Escribe tu mensaje aquí...'}
                   required
                   rows={6}
                   maxLength={1000}
@@ -132,7 +130,7 @@ export default function Contact() {
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Enviando..." : "Enviar mensaje"}
+                {loading ? (t('contact')?.form?.sending ?? 'Enviando...') : (t('contact')?.form?.send_button ?? 'Enviar mensaje')}
               </Button>
             </form>
           </CardContent>
@@ -141,10 +139,8 @@ export default function Contact() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Información de contacto</CardTitle>
-              <CardDescription>
-                También puedes contactarnos directamente a través de estos medios.
-              </CardDescription>
+              <CardTitle>{t('contact')?.info?.title ?? 'Información de contacto'}</CardTitle>
+              <CardDescription>{t('contact')?.info?.description ?? 'También puedes contactarnos directamente a través de estos medios.'}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start gap-3">
@@ -152,7 +148,7 @@ export default function Contact() {
                   <Mail className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium">Email</p>
+                  <p className="font-medium">{t('contact')?.info?.labels?.email ?? 'Email'}</p>
                   <a href="mailto:contacto@ecosense.com" className="text-muted-foreground hover:text-primary">
                     contacto@ecosense.com
                   </a>
@@ -164,7 +160,7 @@ export default function Contact() {
                   <Phone className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium">Teléfono</p>
+                  <p className="font-medium">{t('contact')?.info?.labels?.phone ?? 'Teléfono'}</p>
                   <p className="text-muted-foreground">+34 900 123 456</p>
                 </div>
               </div>
@@ -174,7 +170,7 @@ export default function Contact() {
                   <MapPin className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium">Dirección</p>
+                  <p className="font-medium">{t('contact')?.info?.labels?.address ?? 'Dirección'}</p>
                   <p className="text-muted-foreground">
                     Calle Sostenibilidad 123<br />
                     28001 Madrid, España
@@ -185,8 +181,8 @@ export default function Contact() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Horario de atención</CardTitle>
+          <CardHeader>
+              <CardTitle>{t('contact')?.hours?.title ?? 'Horario de atención'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
@@ -207,8 +203,8 @@ export default function Contact() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Preguntas frecuentes</CardTitle>
+          <CardHeader>
+              <CardTitle>{t('contact')?.faq?.title ?? 'Preguntas frecuentes'}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">

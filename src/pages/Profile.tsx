@@ -7,11 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useMetrics } from "@/hooks/useMetrics";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Profile() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { trackClick, trackMetric } = useMetrics("profile");
+  const { t } = useLanguage();
 
   const [profile, setProfile] = useState<any>(null);
   const [nombre, setNombre] = useState("");
@@ -40,8 +42,8 @@ export default function Profile() {
       setProfile(data || null);
       setNombre(data?.nombre || "");
     } catch (e) {
-      console.error("Error loading profile:", e);
-      toast.error("No se pudo cargar el perfil");
+    console.error("Error loading profile:", e);
+    toast.error(t('profile')?.messages?.error_load ?? "No se pudo cargar el perfil");
     }
   };
 
@@ -50,9 +52,9 @@ export default function Profile() {
     if (!user) return;
 
     const nuevo = nombre?.trim() ?? "";
-    if (!nuevo || nuevo.length < 2) {
+      if (!nuevo || nuevo.length < 2) {
       // don't save invalid minimal names; just notify
-      toast.error("El nombre debe tener al menos 2 caracteres");
+      toast.error(t('profile')?.messages?.name_too_short ?? "El nombre debe tener al menos 2 caracteres");
       return;
     }
 
@@ -72,11 +74,11 @@ export default function Profile() {
       if (error) throw error;
       const duration = Date.now() - start;
       try { await trackMetric({ accion: "profile_update", metadata: { ms: duration } }); } catch {}
-      toast.success("Perfil actualizado");
+      toast.success(t('profile')?.messages?.updated ?? "Perfil actualizado");
       await cargarPerfil();
     } catch (e) {
       console.error(e);
-      toast.error("No se pudo actualizar el perfil");
+      toast.error(t('profile')?.messages?.error_update ?? "No se pudo actualizar el perfil");
     } finally {
       setSaving(false);
     }
