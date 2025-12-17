@@ -121,6 +121,7 @@ export default function Dashboard() {
       if (firstDeviceId) {
         setSelectedDevice(firstDeviceId);
         // Recursive call will handle selectedDevice case on next effect
+
         return;
       }
 
@@ -156,7 +157,9 @@ export default function Dashboard() {
         const today = new Date().toISOString().split("T")[0];
 
         // Create initial per-device daily consumption using potencia (hours=24)
+        
         try {
+        
           const potencia = data && data[0] ? Number(data[0].potencia_w || 0) : 0;
           const kwh = Math.round(((potencia * 24) / 1000) * 1000) / 1000; // 3 decimals
           const { error: insertError } = await supabase.from("dispositivo_consumo_diario").insert({

@@ -26,6 +26,7 @@ export default function Contact() {
     mensaje: "",
   });
 
+
   useEffect(() => {
     trackPageView();
   }, [trackPageView]);
@@ -35,6 +36,7 @@ export default function Contact() {
     
     try {
       // Validar datos del formulario
+      
       contactSchema.parse(formData);
       
       setLoading(true);

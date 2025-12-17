@@ -12,6 +12,7 @@ import { Shield, Users, Activity, Eye, Clock, BarChart2, AlertTriangle } from "l
 import { toast } from "sonner";
 
 export default function Admin() {
+
   const navigate = useNavigate();
   const { user, isAdmin, loading } = useAuth();
   const { trackClick } = useMetrics("admin");
@@ -47,6 +48,7 @@ export default function Admin() {
         .limit(50);
 
       if (metricsError) throw metricsError;
+
 
       // Load stats
       const { count: usersCount } = await supabase
@@ -92,6 +94,7 @@ export default function Admin() {
         .eq("formulario", "home")
         .eq("accion", "abandonment");
 
+        
       // Compute aggregates client-side
       let avgTimeToCTA = 0;
       let pctCTAWithin30 = 0;
