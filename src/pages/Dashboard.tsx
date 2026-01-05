@@ -49,6 +49,21 @@ export default function Dashboard() {
     }
   }, [user, loading, navigate, viewMode, hoursWindow, daysWindow, selectedDevice]);
 
+  // Listen for refresh-data event (triggered by Ctrl/Cmd+R shortcut)
+  useEffect(() => {
+    const handleRefreshData = async () => {
+      try {
+        await cargarDispositivos();
+        await cargarConsumo();
+      } catch (e) {
+        console.error("Error refrescando datos:", e);
+      }
+    };
+
+    window.addEventListener('refresh-data', handleRefreshData);
+    return () => window.removeEventListener('refresh-data', handleRefreshData);
+  }, []);
+
   const cargarDispositivos = async () => {
     try {
       const start = Date.now();

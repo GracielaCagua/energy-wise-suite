@@ -38,6 +38,16 @@ export default function Admin() {
     }
   }, [user, isAdmin, loading, navigate]);
 
+  // Listen for refresh-data event (triggered by Ctrl/Cmd+R shortcut)
+  useEffect(() => {
+    const handleRefreshData = async () => {
+      await cargarDatosAdmin();
+    };
+
+    window.addEventListener('refresh-data', handleRefreshData);
+    return () => window.removeEventListener('refresh-data', handleRefreshData);
+  }, []);
+
   const cargarDatosAdmin = async () => {
     try {
       // Load metrics
