@@ -174,8 +174,8 @@ export default function Contact() {
                 <div>
                   <p className="font-medium">{t('contact')?.info?.labels?.address ?? 'Dirección'}</p>
                   <p className="text-muted-foreground">
-                    Calle Sostenibilidad 123<br />
-                    28001 Madrid, España
+                    Avenida Flavio Alfaro<br />
+                    Manta, Manabí, Ecuador
                   </p>
                 </div>
               </div>

@@ -112,7 +112,7 @@ export default function Home() {
   return (
     <div className="space-y-0 -mx-4 md:-mx-6 -my-6">
       {/* Hero Section */}
-      <section className="relative py-20 md:py-32 overflow-hidden">
+      <section className="relative py-8 md:py-12 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-accent/5 to-background -z-10" />
         
         <div className="container">
@@ -168,7 +168,7 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 md:py-32 bg-muted/30">
+      <section id="features" className="py-12 md:py-16 bg-muted/30">
         <div className="container">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl md:text-4xl font-bold">
@@ -202,7 +202,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 md:py-32">
+      <section className="py-12 md:py-16">
         <div className="container">
           <Card className="relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/50 to-accent opacity-10" />
